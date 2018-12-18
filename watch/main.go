@@ -33,18 +33,17 @@ func main() {
 		w = 80
 	}
 	go interruptHandler(stop)
-	//tput smcup
-	print("\033[?1049h")
+	tput("smcup")
 	cmd := &exec.Cmd{}
 	for {
 		cmd = exec.Command(a[0])
 		if len(a) > 1 {
-			cmd = exec.Command(a[0], a[1:]...)
+			cmd.Args = a
 		}
 		b, _ := cmd.CombinedOutput()
 		arr := strings.Split(string(b), "\n")
 		//Clear screen and move cursor home
-		print("\033[H\033[2J")
+		tput("clear")
 		for i := 0; i < h && i < len(arr)-1; i++ {
 			text := arr[i]
 			if len(text) > w {
@@ -79,7 +78,13 @@ func resizeHandler(h, w *int, resize <-chan os.Signal) {
 
 func interruptHandler(stop <-chan os.Signal) {
 	<-stop
-	//tput rmcup
-	print("\033[?1049l")
+	tput("rmcup")
 	os.Exit(0)
+}
+
+func tput(args ...string) {
+	cmd := exec.Command("tput", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
 }
