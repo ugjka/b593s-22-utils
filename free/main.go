@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+// TODO: https://golang.org/pkg/syscall/#Sysinfo_t
+
 func main() {
 	b, err := ioutil.ReadFile("/proc/meminfo")
 	if err != nil {
