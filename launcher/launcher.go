@@ -34,7 +34,7 @@ func main() {
 	ioutil.WriteFile(path, []byte("started"), 0644)
 
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGTERM, os.Kill, os.Interrupt)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
 	// Programs that exit
 	oneshots := make([]*exec.Cmd, 1)
