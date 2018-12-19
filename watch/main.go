@@ -58,11 +58,7 @@ func main() {
 			} else {
 				errExit(err)
 			}
-			if string(b) == "\n" {
-				j++
-				i = 0
-			}
-			if i >= w {
+			if string(b) == "\n" || i >= w {
 				j++
 				i = 0
 			}
