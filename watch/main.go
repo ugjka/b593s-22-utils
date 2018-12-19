@@ -43,13 +43,16 @@ func main() {
 		if len(a) > 1 {
 			cmd.Args = a
 		}
-		out, err := cmd.StdoutPipe()
-		errExit(err)
-		err = cmd.Start()
-		errExit(err)
+
 		b := make([]byte, 1)
 		buff := bytes.NewBufferString("")
-		tput("clear")
+
+		out, err := cmd.StdoutPipe()
+		errExit(err)
+
+		err = cmd.Start()
+		errExit(err)
+
 		mu.Lock()
 		for i, j := 0, 0; ; i++ {
 			_, err := out.Read(b)
@@ -71,6 +74,7 @@ func main() {
 			errExit(err)
 		}
 		mu.Unlock()
+		tput("clear")
 		fmt.Print(buff.String())
 		buff.Reset()
 		_, err = cmd.Process.Wait()
@@ -109,7 +113,6 @@ func interruptHandler(stop <-chan os.Signal, mu *sync.RWMutex) {
 func tput(args ...string) {
 	cmd := exec.Command("tput", args...)
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	cmd.Run()
 }
 
