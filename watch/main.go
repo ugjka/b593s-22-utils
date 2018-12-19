@@ -2,12 +2,13 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -42,23 +43,42 @@ func main() {
 		if len(a) > 1 {
 			cmd.Args = a
 		}
-		b, _ := cmd.CombinedOutput()
-		arr := strings.Split(string(b), "\n")
-		//Clear screen and move cursor home
+		out, err := cmd.StdoutPipe()
+		errExit(err)
+		err = cmd.Start()
+		errExit(err)
+		b := make([]byte, 1)
+		buff := bytes.NewBufferString("")
 		tput("clear")
-		mu.RLock()
-		for i := 0; i < h && i < len(arr)-1; i++ {
-			text := arr[i]
-			if len(text) > w {
-				text = text[:w]
+		mu.Lock()
+		for i, j := 0, 0; ; i++ {
+			_, err := out.Read(b)
+			if err == io.EOF {
+				break
+			} else {
+				errExit(err)
 			}
-			if i+1 != h {
-				fmt.Println(text)
-				continue
+			if string(b) == "\n" {
+				j++
+				i = 0
 			}
-			fmt.Print(text)
+			if i >= w {
+				j++
+				i = 0
+			}
+			if j >= h {
+				err := cmd.Process.Kill()
+				errExit(err)
+				break
+			}
+			_, err = buff.Write(b)
+			errExit(err)
 		}
-		mu.RUnlock()
+		mu.Unlock()
+		fmt.Print(buff.String())
+		buff.Reset()
+		_, err = cmd.Process.Wait()
+		errExit(err)
 		time.Sleep(time.Millisecond * time.Duration(*d))
 	}
 }
@@ -95,4 +115,13 @@ func tput(args ...string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Run()
+}
+
+func errExit(err error) {
+	if err == nil {
+		return
+	}
+	tput("rmcup")
+	fmt.Fprintf(os.Stderr, "Error :%v", err)
+	os.Exit(1)
 }
