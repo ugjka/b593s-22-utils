@@ -36,7 +36,10 @@ func main() {
 		w = 80
 	}
 	go interruptHandler(stop, mu)
-	tput("smcup")
+	err = tput("smcup")
+	if err != nil {
+		print("\033[?1049h")
+	}
 	cmd := &exec.Cmd{}
 	for {
 		cmd = exec.Command(a[0])
@@ -74,7 +77,10 @@ func main() {
 			errExit(err)
 		}
 		mu.Unlock()
-		tput("clear")
+		err = tput("clear")
+		if err != nil {
+			print("\033[2J\033[H")
+		}
 		fmt.Print(buff.String())
 		buff.Reset()
 		_, err = cmd.Process.Wait()
@@ -106,21 +112,30 @@ func resizeHandler(h, w *int, resize <-chan os.Signal, mu *sync.RWMutex) {
 func interruptHandler(stop <-chan os.Signal, mu *sync.RWMutex) {
 	<-stop
 	mu.Lock()
-	tput("rmcup")
+	err := tput("rmcup")
+	if err != nil {
+		print("\033[?1049l")
+	}
 	os.Exit(0)
 }
 
-func tput(args ...string) {
+func tput(args ...string) error {
 	cmd := exec.Command("tput", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Run()
+	b, err := cmd.Output()
+	if err == nil {
+		io.Copy(os.Stdout, bytes.NewReader(b))
+	}
+	return err
 }
 
 func errExit(err error) {
 	if err == nil {
 		return
 	}
-	tput("rmcup")
+	terr := tput("rmcup")
+	if terr != nil {
+		print("\033[?1049l")
+	}
 	fmt.Fprintf(os.Stderr, "Error :%v", err)
 	os.Exit(1)
 }
