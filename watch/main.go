@@ -41,14 +41,14 @@ func main() {
 		print("\033[?1049h")
 	}
 	cmd := &exec.Cmd{}
+	b := make([]byte, 1)
+	buff := bytes.NewBuffer(nil)
+
 	for {
 		cmd = exec.Command(a[0])
 		if len(a) > 1 {
 			cmd.Args = a
 		}
-
-		b := make([]byte, 1)
-		buff := bytes.NewBufferString("")
 
 		out, err := cmd.StdoutPipe()
 		errExit(err)
@@ -69,6 +69,9 @@ func main() {
 				i = 0
 			}
 			if j >= h {
+				if cmd.Process == nil {
+					break
+				}
 				err := cmd.Process.Kill()
 				errExit(err)
 				break
@@ -77,14 +80,14 @@ func main() {
 			errExit(err)
 		}
 		mu.Unlock()
+		_, err = cmd.Process.Wait()
+		errExit(err)
 		err = tput("clear")
 		if err != nil {
 			print("\033[2J\033[H")
 		}
 		fmt.Print(buff.String())
 		buff.Reset()
-		_, err = cmd.Process.Wait()
-		errExit(err)
 		time.Sleep(time.Millisecond * time.Duration(*d))
 	}
 }
