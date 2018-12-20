@@ -54,7 +54,9 @@ func main() {
 
 	<-stop
 	for _, v := range daemons {
-		v.Process.Kill()
+		if v.Process != nil {
+			v.Process.Kill()
+		}
 	}
 	os.Remove(path)
 }
