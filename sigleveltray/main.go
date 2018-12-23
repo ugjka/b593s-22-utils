@@ -1,11 +1,10 @@
+//go:generate go run gen/main.go
 // Show the signal level of your b593s-22 in your system status tray
 package main
 
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -19,22 +18,13 @@ func main() {
 
 func onready() {
 	go quitter()
-	//Get level images
-	sigs, err := getSigImgs()
-	if err != nil {
-		log.Fatal(err)
-	}
 	//Get no signal image
-	sigh, err := getSigh()
-	if err != nil {
-		log.Fatal(err)
-	}
-	systray.SetIcon(sigh)
+	systray.SetIcon(nosig)
 	for {
 		time.Sleep(time.Second)
 		level, err := getSignal()
 		if err != nil {
-			systray.SetIcon(sigh)
+			systray.SetIcon(nosig)
 			continue
 		}
 		systray.SetIcon(sigs[level/10])
@@ -67,36 +57,4 @@ func quitter() {
 	m := systray.AddMenuItem("Quit", "Quit the whole app")
 	<-m.ClickedCh
 	systray.Quit()
-}
-
-func getSigImgs() (sigs map[int][]byte, err error) {
-	const sigTmpl = "http://192.168.1.1/res/signal_%d.gif"
-	sigs = make(map[int][]byte)
-	for i := 0; i <= 5; i++ {
-		resp, err := http.DefaultClient.Get(fmt.Sprintf(sigTmpl, i))
-		if err != nil {
-			return nil, err
-		}
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		resp.Body.Close()
-		sigs[i] = b
-	}
-	return sigs, nil
-}
-
-func getSigh() (sigh []byte, err error) {
-	const sighURL = "http://192.168.1.1/res/sigh.png"
-	resp, err := http.DefaultClient.Get(sighURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	sigh, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return sigh, nil
 }
