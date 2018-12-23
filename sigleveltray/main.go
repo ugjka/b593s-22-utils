@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
+	"math"
 	"math/rand"
 	"net/http"
 	"time"
@@ -20,6 +21,7 @@ func onready() {
 	go quitter()
 	//Get no signal image
 	systray.SetIcon(nosig)
+	prev := math.MaxInt64
 	for {
 		time.Sleep(time.Second)
 		level, err := getSignal()
@@ -27,7 +29,11 @@ func onready() {
 			systray.SetIcon(nosig)
 			continue
 		}
-		systray.SetIcon(sigs[level/10])
+		if level == prev {
+			continue
+		}
+		systray.SetIcon(sigs[level])
+		prev = level
 	}
 }
 
@@ -45,7 +51,7 @@ func getSignal() (sig int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	return s.SIG, nil
+	return s.SIG / 10, nil
 }
 
 //Status represents signal status
