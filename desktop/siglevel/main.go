@@ -24,7 +24,7 @@ func onready() {
 	systray.SetIcon(nosig)
 	prev := -1
 	for {
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 5)
 		level, err := getSignal()
 		if err != nil {
 			systray.SetIcon(nosig)
