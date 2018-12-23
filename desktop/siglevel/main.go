@@ -5,7 +5,6 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
-	"math"
 	"math/rand"
 	"net/http"
 	"time"
@@ -14,6 +13,7 @@ import (
 )
 
 func main() {
+	http.DefaultClient.Timeout = time.Second * 5
 	rand.Seed(time.Now().UnixNano())
 	systray.Run(onready, nil)
 }
@@ -22,12 +22,13 @@ func onready() {
 	go quitter()
 	//Get no signal image
 	systray.SetIcon(nosig)
-	prev := math.MaxInt64
+	prev := -1
 	for {
 		time.Sleep(time.Second)
 		level, err := getSignal()
 		if err != nil {
 			systray.SetIcon(nosig)
+			prev = -1
 			continue
 		}
 		if level == prev {
