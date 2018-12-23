@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	systray.Run(onready, nil)
 }
 
@@ -39,7 +40,6 @@ func onready() {
 
 func getSignal() (sig int, err error) {
 	const post = "http://192.168.1.1/index/getStatusByAjax.cgi?rid=%d"
-	rand.Seed(time.Now().UnixNano())
 	n := rand.Intn(1000)
 	resp, err := http.DefaultClient.PostForm(fmt.Sprintf(post, n), nil)
 	if err != nil {
