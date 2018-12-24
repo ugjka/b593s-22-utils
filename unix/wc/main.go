@@ -1,3 +1,4 @@
+// wc implementation
 package main
 
 import (
@@ -20,9 +21,7 @@ func main() {
 		os.Exit(1)
 	}
 	if *l == false && *w == false && *c == false {
-		*l = true
-		*w = true
-		*c = true
+		*l, *w, *c = true, true, true
 	}
 	err := check(args)
 	if err != nil {
