@@ -42,18 +42,19 @@ func main() {
 	}
 	tlines, twords, tchars := 0, 0, 0
 	for _, v := range args {
-		sc := &bufio.Scanner{}
-		if v != "-" {
-			f, err := os.Open(v)
+		var f *os.File
+		var err error
+		if v == "-" {
+			f = os.Stdin
+		} else {
+			f, err = os.Open(v)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "error: %v\n", err)
-				continue
+				return
 			}
 			defer f.Close()
-			sc = bufio.NewScanner(f)
-		} else {
-			sc = bufio.NewScanner(os.Stdin)
 		}
+		sc := bufio.NewScanner(f)
 		lines, words, chars := 0, 0, 0
 		for sc.Scan() {
 			lines++
