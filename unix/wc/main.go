@@ -38,17 +38,22 @@ func main() {
 	fmt.Fprint(tw, " \n")
 
 	if len(args) == 0 {
-		args = append(args, "/dev/stdin")
+		args = append(args, "-")
 	}
 	tlines, twords, tchars := 0, 0, 0
 	for _, v := range args {
-		f, err := os.Open(v)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			return
+		sc := &bufio.Scanner{}
+		if v != "-" {
+			f, err := os.Open(v)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error: %v\n", err)
+				continue
+			}
+			defer f.Close()
+			sc = bufio.NewScanner(f)
+		} else {
+			sc = bufio.NewScanner(os.Stdin)
 		}
-		defer f.Close()
-		sc := bufio.NewScanner(f)
 		lines, words, chars := 0, 0, 0
 		for sc.Scan() {
 			lines++
