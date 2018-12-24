@@ -16,10 +16,6 @@ func main() {
 	c := flag.Bool("c", false, "count chars")
 	flag.Parse()
 	args := flag.Args()
-	if len(args) < 1 {
-		fmt.Fprintf(os.Stderr, "error: no files given!\n")
-		os.Exit(1)
-	}
 	if *l == false && *w == false && *c == false {
 		*l, *w, *c = true, true, true
 	}
@@ -41,16 +37,24 @@ func main() {
 	}
 	fmt.Fprint(tw, " \n")
 
+	if len(args) == 0 {
+		args = append(args, "-")
+	}
 	tlines, twords, tchars := 0, 0, 0
 	for _, v := range args {
-		lines, words, chars := 0, 0, 0
-		f, err := os.Open(v)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			continue
+		sc := &bufio.Scanner{}
+		if v != "-" {
+			f, err := os.Open(v)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error: %v\n", err)
+				continue
+			}
+			defer f.Close()
+			sc = bufio.NewScanner(f)
+		} else {
+			sc = bufio.NewScanner(os.Stdin)
 		}
-		defer f.Close()
-		sc := bufio.NewScanner(f)
+		lines, words, chars := 0, 0, 0
 		for sc.Scan() {
 			lines++
 			words += len(strings.Fields(sc.Text()))
