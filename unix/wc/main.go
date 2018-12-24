@@ -28,7 +28,20 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-	tw := tabwriter.NewWriter(os.Stdout, 4, 0, 2, ' ', tabwriter.AlignRight)
+
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', tabwriter.AlignRight)
+	if *l {
+		fmt.Fprint(tw, "lines\t")
+	}
+	if *w {
+		fmt.Fprint(tw, "words\t")
+	}
+	if *c {
+		fmt.Fprint(tw, "characters\t")
+	}
+	fmt.Fprint(tw, " \n")
+
+	tlines, twords, tchars := 0, 0, 0
 	for _, v := range args {
 		lines, words, chars := 0, 0, 0
 		f, err := os.Open(v)
@@ -43,6 +56,10 @@ func main() {
 			words += len(strings.Fields(sc.Text()))
 			chars += strings.Count(sc.Text(), "")
 		}
+		tlines += lines
+		twords += words
+		tchars += chars
+
 		if *l {
 			fmt.Fprintf(tw, "%d\t", lines)
 		}
@@ -52,7 +69,19 @@ func main() {
 		if *c {
 			fmt.Fprintf(tw, "%d\t", chars)
 		}
-		fmt.Fprintf(tw, "%s\t\n", v)
+		fmt.Fprintf(tw, " %s\n", v)
+	}
+	if len(args) > 1 {
+		if *l {
+			fmt.Fprintf(tw, "%d\t", tlines)
+		}
+		if *w {
+			fmt.Fprintf(tw, "%d\t", twords)
+		}
+		if *c {
+			fmt.Fprintf(tw, "%d\t", tchars)
+		}
+		fmt.Fprint(tw, " total\n")
 	}
 	tw.Flush()
 }
