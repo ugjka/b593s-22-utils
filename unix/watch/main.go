@@ -92,12 +92,11 @@ func geometry() (h, w int) {
 	cmd.Stdin = os.Stdin
 	b, err := cmd.Output()
 	if err != nil {
-		return
+		return 20, 80
 	}
 	_, err = fmt.Sscanf(string(b), "%d %d", &h, &w)
 	if err != nil {
-		h = 20
-		w = 80
+		return 20, 80
 	}
 	return
 }
