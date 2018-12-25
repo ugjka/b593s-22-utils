@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	d := flag.Int64("d", 1000, "delay in milliseconds")
+	d := flag.Int64("d", 500, "delay in milliseconds")
 	flag.Parse()
 	a := flag.Args()
 	if len(a) < 1 {
@@ -34,6 +34,7 @@ func main() {
 	}
 	cmd := &exec.Cmd{}
 	b := make([]byte, h*w)
+
 	for {
 		select {
 		case <-resize:
@@ -50,15 +51,13 @@ func main() {
 
 		out, err := cmd.StdoutPipe()
 		errExit(err)
-
 		err = cmd.Start()
 		errExit(err)
 		n, err := out.Read(b)
-		if err == io.EOF {
-			continue
-		} else {
-			errExit(err)
-		}
+		errExit(err)
+		err = kill(cmd)
+		errExit(err)
+
 		i, j, t := 0, 0, 0
 		for _, v := range b[:n] {
 			if v == '\n' || i >= w {
@@ -66,18 +65,12 @@ func main() {
 				i = 0
 			}
 			if j >= h {
-				if cmd.Process == nil {
-					break
-				}
-				err := cmd.Process.Kill()
-				errExit(err)
 				break
 			}
 			i++
 			t++
 		}
-		_, err = cmd.Process.Wait()
-		errExit(err)
+
 		err = tput("clear")
 		if err != nil {
 			print("\033[2J\033[H")
@@ -128,4 +121,19 @@ func errExit(err error) {
 	}
 	fmt.Fprintf(os.Stderr, "Error :%v", err)
 	os.Exit(1)
+}
+
+func kill(c *exec.Cmd) (err error) {
+	if c.Process == nil {
+		return
+	}
+	err = c.Process.Kill()
+	if err != nil {
+		return
+	}
+	_, err = c.Process.Wait()
+	if err != nil {
+		return
+	}
+	return
 }
