@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 )
@@ -22,29 +21,28 @@ func main() {
 		os.Stderr.WriteString("nothing given!!!\n")
 		return
 	}
-	mu := &sync.RWMutex{}
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	resize := make(chan os.Signal, 5)
 	signal.Notify(resize, syscall.SIGWINCH)
 
-	h, w, err := geometry()
-	if err == nil {
-		go resizeHandler(&h, &w, resize, mu)
-	} else {
-		h = 20
-		w = 80
-	}
-	go interruptHandler(stop, mu)
-	err = tput("smcup")
+	h, w := geometry()
+	err := tput("smcup")
 	if err != nil {
 		print("\033[?1049h")
 	}
 	cmd := &exec.Cmd{}
-	b := make([]byte, 1)
-	buff := bytes.NewBuffer(nil)
-
+	b := make([]byte, h*w)
 	for {
+		select {
+		case <-resize:
+			h, w = geometry()
+			b = make([]byte, h*w)
+		case <-stop:
+			exit()
+		default:
+		}
 		cmd = exec.Command(a[0])
 		if len(a) > 1 {
 			cmd.Args = a
@@ -55,16 +53,15 @@ func main() {
 
 		err = cmd.Start()
 		errExit(err)
-
-		mu.Lock()
-		for i, j := 0, 0; ; i++ {
-			_, err := out.Read(b)
-			if err == io.EOF {
-				break
-			} else {
-				errExit(err)
-			}
-			if b[0] == '\n' || i >= w {
+		n, err := out.Read(b)
+		if err == io.EOF {
+			continue
+		} else {
+			errExit(err)
+		}
+		i, j, t := 0, 0, 0
+		for _, v := range b[:n] {
+			if v == '\n' || i >= w {
 				j++
 				i = 0
 			}
@@ -76,23 +73,21 @@ func main() {
 				errExit(err)
 				break
 			}
-			_, err = buff.Write(b)
-			errExit(err)
+			i++
+			t++
 		}
-		mu.Unlock()
 		_, err = cmd.Process.Wait()
 		errExit(err)
 		err = tput("clear")
 		if err != nil {
 			print("\033[2J\033[H")
 		}
-		fmt.Print(buff.String())
-		buff.Reset()
+		fmt.Printf("%s", b[:t])
 		time.Sleep(time.Millisecond * time.Duration(*d))
 	}
 }
 
-func geometry() (h, w int, err error) {
+func geometry() (h, w int) {
 	cmd := exec.Command("stty", "size")
 	cmd.Stdin = os.Stdin
 	b, err := cmd.Output()
@@ -100,21 +95,14 @@ func geometry() (h, w int, err error) {
 		return
 	}
 	_, err = fmt.Sscanf(string(b), "%d %d", &h, &w)
+	if err != nil {
+		h = 20
+		w = 80
+	}
 	return
 }
 
-func resizeHandler(h, w *int, resize <-chan os.Signal, mu *sync.RWMutex) {
-	for {
-		<-resize
-		mu.Lock()
-		*h, *w, _ = geometry()
-		mu.Unlock()
-	}
-}
-
-func interruptHandler(stop <-chan os.Signal, mu *sync.RWMutex) {
-	<-stop
-	mu.Lock()
+func exit() {
 	err := tput("rmcup")
 	if err != nil {
 		print("\033[?1049l")
