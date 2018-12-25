@@ -1,3 +1,4 @@
+// Get kinda like wget
 package main
 
 import (

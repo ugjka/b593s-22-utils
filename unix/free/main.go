@@ -1,3 +1,4 @@
+// Simple free implementation
 package main
 
 import (

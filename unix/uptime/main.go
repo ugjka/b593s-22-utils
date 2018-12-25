@@ -1,3 +1,4 @@
+// Barebones uptime util
 package main
 
 import (

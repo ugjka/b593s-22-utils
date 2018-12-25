@@ -1,3 +1,4 @@
+// Simple daemonizer
 package main
 
 import (

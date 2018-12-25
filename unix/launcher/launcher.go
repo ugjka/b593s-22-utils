@@ -1,3 +1,6 @@
+// launcher is an adhoc init system for your B593s-22
+// You replace it with smbd program and enable samba in your router
+// And then it runs your own scripts and daemons on your router
 package main
 
 import (
