@@ -23,6 +23,6 @@ func errExit(err error) {
 	if err == nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "Error: %v", err)
+	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	os.Exit(1)
 }

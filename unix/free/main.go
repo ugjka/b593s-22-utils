@@ -13,7 +13,7 @@ import (
 func main() {
 	b, err := ioutil.ReadFile("/proc/meminfo")
 	if err != nil {
-		os.Stderr.WriteString(err.Error())
+		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(1)
 	}
 
