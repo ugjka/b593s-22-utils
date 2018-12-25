@@ -119,7 +119,7 @@ func errExit(err error) {
 	if terr != nil {
 		print("\033[?1049l")
 	}
-	fmt.Fprintf(os.Stderr, "Error :%v", err)
+	fmt.Fprintf(os.Stderr, "Error: %v", err)
 	os.Exit(1)
 }
 
