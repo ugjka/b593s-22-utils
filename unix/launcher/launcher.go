@@ -44,8 +44,9 @@ func main() {
 	oneshots[0] = exec.Command("settings.sh")
 
 	// Programs that do not exit
-	daemons := make([]*exec.Cmd, 1)
+	daemons := make([]*exec.Cmd, 2)
 	daemons[0] = exec.Command("redditbot")
+	daemons[1] = exec.Command("speedd")
 
 	for _, v := range oneshots {
 		v.Run()
