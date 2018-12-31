@@ -64,11 +64,7 @@ func hexEncode(r io.Reader) (hex string, err error) {
 		} else if err != nil {
 			return "", err
 		}
-		if int(b[0]) < 16 {
-			buff.WriteString("\\x" + fmt.Sprintf("0%X", b[0]))
-		} else {
-			buff.WriteString("\\x" + fmt.Sprintf("%X", b[0]))
-		}
+		buff.WriteString("\\x" + fmt.Sprintf("%02X", b[0]))
 	}
 	return buff.String(), nil
 }
