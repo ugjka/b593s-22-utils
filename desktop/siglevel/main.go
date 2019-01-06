@@ -52,7 +52,7 @@ func getSignal() (sig int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	return s.SIG / 10, nil
+	return s.SIG, nil
 }
 
 //Status represents signal status
