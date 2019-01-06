@@ -31,6 +31,11 @@ func onready() {
 			prev = -1
 			continue
 		}
+		if _, ok := sigs[level]; !ok {
+			systray.SetIcon(nosig)
+			prev = -1
+			continue
+		}
 		if level == prev {
 			continue
 		}
